@@ -159,6 +159,8 @@ ReturnValue          BYTE,AUTO
   QuickWindow{PROP:MinHeight} = 180                        ! Restrict the minimum window height
   Resizer.Init(AppStrategy:Spread)                         ! Controls will spread out as the window gets bigger
   SELF.AddItem(Resizer)                                    ! Add resizer to window manager
+  INIMgr.Fetch('BrowseProducts',QuickWindow)               ! Restore window settings from non-volatile store
+  Resizer.Resize                                           ! Reset required after window size altered by INI manager
   BRW1.QueryControl = ?Query
   BRW1.UpdateQuery(QBE6,1)
   BRW1.AddToolbarTarget(Toolbar)                           ! Browse accepts toolbar control
@@ -179,6 +181,9 @@ ReturnValue          BYTE,AUTO
   IF SELF.FilesOpened
     Relate:Product.Close
   END
+  IF SELF.Opened
+    INIMgr.Update('BrowseProducts',QuickWindow)            ! Save window data to non-volatile store
+  END
   GlobalErrors.SetProcedureName
   RETURN ReturnValue
 
@@ -189,7 +194,7 @@ ThisWindow.Reset PROCEDURE(BYTE Force=0)
   SELF.ForcedReset += Force
   IF QuickWindow{Prop:AcceptAll} THEN RETURN.
   !Display image
-  ?Image1{PROP:TEXT} = Products.Record.PictureFile
+  ?Image1{PROP:TEXT} = Product:PictureFile
   ResizeImage(?Image1,267,19,123,134)
   PARENT.Reset(Force)
 

@@ -81,9 +81,9 @@ ThisWindow.Ask PROCEDURE
   OF ViewRecord
     ActionMessage = 'View Record'
   OF InsertRecord
-    ActionMessage = 'Enter  your Company''''s Information'
+    ActionMessage = 'Enter  your Company''s Information'
   OF ChangeRecord
-    ActionMessage = 'Change your Company''''s Information'
+    ActionMessage = 'Change your Company''s Information'
   OF DeleteRecord
     GlobalErrors.Throw(Msg:DeleteIllegal)
     RETURN
@@ -138,6 +138,8 @@ ReturnValue          BYTE,AUTO
   QuickWindow{PROP:MinHeight} = 111                        ! Restrict the minimum window height
   Resizer.Init(AppStrategy:Spread)                         ! Controls will spread out as the window gets bigger
   SELF.AddItem(Resizer)                                    ! Add resizer to window manager
+  INIMgr.Fetch('UpdateCompany',QuickWindow)                ! Restore window settings from non-volatile store
+  Resizer.Resize                                           ! Reset required after window size altered by INI manager
   ToolBarForm.HelpButton=?Help
   SELF.AddItem(ToolbarForm)
   SELF.SetAlerts()
@@ -153,6 +155,9 @@ ReturnValue          BYTE,AUTO
   IF ReturnValue THEN RETURN ReturnValue.
   IF SELF.FilesOpened
     Relate:Company.Close
+  END
+  IF SELF.Opened
+    INIMgr.Update('UpdateCompany',QuickWindow)             ! Save window data to non-volatile store
   END
   GlobalErrors.SetProcedureName
   RETURN ReturnValue

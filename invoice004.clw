@@ -131,6 +131,8 @@ ReturnValue          BYTE,AUTO
   QuickWindow{PROP:MinHeight} = 139                        ! Restrict the minimum window height
   Resizer.Init(AppStrategy:Spread)                         ! Controls will spread out as the window gets bigger
   SELF.AddItem(Resizer)                                    ! Add resizer to window manager
+  INIMgr.Fetch('SelectProducts',QuickWindow)               ! Restore window settings from non-volatile store
+  Resizer.Resize                                           ! Reset required after window size altered by INI manager
   BRW1.QueryControl = ?Query
   BRW1.Query &= QBE5
   QBE5.AddItem('UPPER(Product:Description)','Product Description','@s30',1)
@@ -149,6 +151,9 @@ ReturnValue          BYTE,AUTO
   IF ReturnValue THEN RETURN ReturnValue.
   IF SELF.FilesOpened
     Relate:Product.Close
+  END
+  IF SELF.Opened
+    INIMgr.Update('SelectProducts',QuickWindow)            ! Save window data to non-volatile store
   END
   GlobalErrors.SetProcedureName
   RETURN ReturnValue

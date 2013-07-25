@@ -25,35 +25,35 @@ QuickWindow          WINDOW('Update Customers'),AT(,,214,191),FONT('MS Sans Seri
                          TAB('Tab 1'),USE(?Tab1)
                          END
                        END
-                       PROMPT('&Company:'),AT(8,9),USE(?CUS:Company:Prompt)
+                       PROMPT('&Company:'),AT(8,9),USE(?Customer:Company:Prompt)
                        ENTRY(@s20),AT(64,9,84,10),USE(Customer:Company),CAP,MSG('Enter the customer''s company')
-                       PROMPT('&First Name:'),AT(8,23),USE(?CUS:FirstName:Prompt)
+                       PROMPT('&First Name:'),AT(8,23),USE(?Customer:FirstName:Prompt)
                        ENTRY(@s20),AT(64,23,84,10),USE(Customer:FirstName),CAP,MSG('Enter the first name of customer'), |
   REQ
-                       PROMPT('MI:'),AT(8,37,23,10),USE(?CUS:MI:Prompt)
+                       PROMPT('MI:'),AT(8,37,23,10),USE(?Customer:MI:Prompt)
                        ENTRY(@s1),AT(64,37,21,10),USE(Customer:MI),UPR,MSG('Enter the middle initial of customer')
-                       PROMPT('&Last Name:'),AT(8,51),USE(?CUS:LastName:Prompt)
+                       PROMPT('&Last Name:'),AT(8,51),USE(?Customer:LastName:Prompt)
                        ENTRY(@s25),AT(64,51,104,10),USE(Customer:LastName),CAP,MSG('Enter the last name of customer'), |
   REQ
-                       PROMPT('&Address1:'),AT(8,65),USE(?CUS:Address1:Prompt)
+                       PROMPT('&Address1:'),AT(8,65),USE(?Customer:Address1:Prompt)
                        ENTRY(@s35),AT(64,65,139,10),USE(Customer:Address1),CAP,MSG('Enter the first line addre' & |
   'ss of customer')
-                       PROMPT('Address2:'),AT(8,79),USE(?CUS:Address2:Prompt)
+                       PROMPT('Address2:'),AT(8,79),USE(?Customer:Address2:Prompt)
                        ENTRY(@s35),AT(64,79,139,10),USE(Customer:Address2),CAP,MSG('Enter the second line addr' & |
   'ess of customer if any')
-                       PROMPT('&City:'),AT(8,93),USE(?CUS:City:Prompt)
+                       PROMPT('&City:'),AT(8,93),USE(?Customer:City:Prompt)
                        ENTRY(@s25),AT(64,93,104,10),USE(Customer:City),CAP,MSG('Enter  city of customer')
-                       PROMPT('&State:'),AT(8,108),USE(?CUS:State:Prompt)
+                       PROMPT('&State:'),AT(8,108),USE(?Customer:State:Prompt)
                        ENTRY(@s2),AT(64,108,22,10),USE(Customer:StateCode),UPR,MSG('Enter state of customer')
-                       PROMPT('&Zip Code:'),AT(8,122),USE(?CUS:ZipCode:Prompt)
+                       PROMPT('&Zip Code:'),AT(8,122),USE(?Customer:ZipCode:Prompt)
                        ENTRY(@K#####|-####KB),AT(64,122,69,10),USE(Customer:ZipCode),MSG('Enter zipcode of customer'), |
   TIP('Enter zipcode of customer'),MSG('Customer''s ZipCode')
-                       PROMPT('Phone Number:'),AT(8,136),USE(?CUS:PhoneNumber:Prompt)
+                       PROMPT('Phone Number:'),AT(8,136),USE(?Customer:PhoneNumber:Prompt)
                        ENTRY(@P(###) ###-####PB),AT(64,136,68,10),USE(Customer:PhoneNumber),MSG('Customer''s p' & |
   'hone number')
-                       PROMPT('Extension:'),AT(8,150),USE(?CUS:Extension:Prompt)
+                       PROMPT('Extension:'),AT(8,150),USE(?Customer:Extension:Prompt)
                        ENTRY(@P<<<#PB),AT(64,150,24,10),USE(Customer:Extension),MSG('Enter customer''s phone extension')
-                       PROMPT('Phone Type:'),AT(109,150,43,10),USE(?CUS:PhoneType:Prompt)
+                       PROMPT('Phone Type:'),AT(109,150,43,10),USE(?Customer:PhoneType:Prompt)
                        LIST,AT(158,150,44,10),USE(Customer:PhoneType),DROP(5),FROM('Home|Work|Cellular|Pager|Fax|Other'), |
   MSG('Enter customer''s phone type')
                        BUTTON,AT(70,167,21,20),USE(?OK),ICON('DISK12.ICO'),DEFAULT,FLAT,MSG('Save recod and Exit'), |
@@ -120,7 +120,7 @@ ReturnValue          BYTE,AUTO
   SELF.Request = GlobalRequest                             ! Store the incoming request
   ReturnValue = PARENT.Init()
   IF ReturnValue THEN RETURN ReturnValue.
-  SELF.FirstField = ?CUS:Company:Prompt
+  SELF.FirstField = ?Customer:Company:Prompt
   SELF.VCRRequest &= VCRRequest
   SELF.Errors &= GlobalErrors                              ! Set this windows ErrorManager to the global ErrorManager
   SELF.AddItem(Toolbar)
@@ -165,6 +165,8 @@ ReturnValue          BYTE,AUTO
   QuickWindow{PROP:MinHeight} = 188                        ! Restrict the minimum window height
   Resizer.Init(AppStrategy:Spread)                         ! Controls will spread out as the window gets bigger
   SELF.AddItem(Resizer)                                    ! Add resizer to window manager
+  INIMgr.Fetch('UpdateCustomers',QuickWindow)              ! Restore window settings from non-volatile store
+  Resizer.Resize                                           ! Reset required after window size altered by INI manager
   ToolBarForm.HelpButton=?Help
   SELF.AddItem(ToolbarForm)
   SELF.SetAlerts()
@@ -180,6 +182,9 @@ ReturnValue          BYTE,AUTO
   IF ReturnValue THEN RETURN ReturnValue.
   IF SELF.FilesOpened
     Relate:Customer.Close
+  END
+  IF SELF.Opened
+    INIMgr.Update('UpdateCustomers',QuickWindow)           ! Save window data to non-volatile store
   END
   GlobalErrors.SetProcedureName
   RETURN ReturnValue

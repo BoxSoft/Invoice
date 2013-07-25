@@ -31,25 +31,25 @@ QuickWindow          WINDOW('Update Detail'),AT(,,193,119),FONT('MS Sans Serif',
   GRAY,IMM,MDI,HLP('~UpdateDetail'),SYSTEM
                        SHEET,AT(3,2,187,116),USE(?CurrentTab),WIZARD
                          TAB('Tab 1'),USE(?Tab1)
-                           PROMPT('Product Number:'),AT(7,21),USE(?DTL:ProductNumber:Prompt),TRN
+                           PROMPT('Product Number:'),AT(7,21),USE(?InvoiceDetail:ProductNumber:Prompt),TRN
                            ENTRY(@n07),AT(66,21,33,10),USE(InvoiceDetail:ProductID),MSG('Product Identification Number')
                            PROMPT('Description:'),AT(7,35),USE(?ProductDescription:Prompt),TRN
                            STRING(@s35),AT(66,35,119,10),USE(ProductDescription),TRN
                          END
                        END
-                       PROMPT('Line Number:'),AT(7,7),USE(?DTL:LineNumber:Prompt)
+                       PROMPT('Line Number:'),AT(7,7),USE(?InvoiceDetail:LineNumber:Prompt)
                        STRING(@n04),AT(66,7,29,10),USE(InvoiceDetail:LineNumber)
                        BUTTON('Select Product'),AT(112,17,68,14),USE(?CallLookup),FONT('MS Serif',8,COLOR:Navy,FONT:bold), |
   IMM
-                       PROMPT('Quantity Ordered:'),AT(7,48),USE(?DTL:QuantityOrdered:Prompt)
+                       PROMPT('Quantity Ordered:'),AT(7,48),USE(?InvoiceDetail:QuantityOrdered:Prompt)
                        SPIN(@n9.2B),AT(65,48,33,10),USE(InvoiceDetail:QuantityOrdered),MSG('Quantity of product ordered'), |
   RANGE(1,99999)
-                       PROMPT('Price:'),AT(117,48,19,10),USE(?DTL:Price:Prompt)
+                       PROMPT('Price:'),AT(117,48,19,10),USE(?InvoiceDetail:Price:Prompt)
                        STRING(@n$10.2B),AT(136,48,41,10),USE(InvoiceDetail:Price)
-                       PROMPT('Tax Rate:'),AT(7,62),USE(?DTL:TaxRate:Prompt)
+                       PROMPT('Tax Rate:'),AT(7,62),USE(?InvoiceDetail:TaxRate:Prompt)
                        ENTRY(@n7.4B),AT(65,62,33,10),USE(InvoiceDetail:TaxRate),MSG('Enter Consumer''s Tax rate')
                        STRING('%'),AT(99,61,13,10),USE(?String3),FONT('MS Sans Serif',11,,FONT:bold)
-                       PROMPT('Discount Rate:'),AT(7,77),USE(?DTL:DiscountRate:Prompt)
+                       PROMPT('Discount Rate:'),AT(7,77),USE(?InvoiceDetail:DiscountRate:Prompt)
                        ENTRY(@n7.4B),AT(65,77,33,10),USE(InvoiceDetail:DiscountRate),MSG('Enter discount rate')
                        STRING('%'),AT(99,77,13,10),USE(?String4),FONT('MS Sans Serif',11,,FONT:bold)
                        CHECK('Back Ordered'),AT(117,62),USE(InvoiceDetail:BackOrdered),COLOR(COLOR:Silver),DISABLE, |
@@ -68,6 +68,7 @@ Run                    PROCEDURE(),BYTE,PROC,DERIVED
 Run                    PROCEDURE(USHORT Number,BYTE Request),BYTE,PROC,DERIVED
 TakeAccepted           PROCEDURE(),BYTE,PROC,DERIVED
 TakeCompleted          PROCEDURE(),BYTE,PROC,DERIVED
+TakeSelected           PROCEDURE(),BYTE,PROC,DERIVED
                      END
 
 Toolbar              ToolbarClass
@@ -98,97 +99,97 @@ DefineListboxStyle ROUTINE
 !Calculate taxes, discounts, and total cost
 !----------------------------------------------------------------------
 CalcValues  ROUTINE
-  IF DTL:TaxRate = 0 THEN
-    IF DTL:DiscountRate = 0 THEN
-      DTL:TotalCost = DTL:Price * |
-                                             DTL:QuantityOrdered
+  IF InvoiceDetail:TaxRate = 0 THEN
+    IF InvoiceDetail:DiscountRate = 0 THEN
+      InvoiceDetail:TotalCost = InvoiceDetail:Price * |
+                                             InvoiceDetail:QuantityOrdered
     ELSE
-      LOC:RegTotalPrice = DTL:Price * DTL:QuantityOrdered
-      DTL:Discount = LOC:RegTotalPrice * |
-                                             DTL:DiscountRate / 100
-      DTL:TotalCost = LOC:RegTotalPrice - DTL:Discount
-      DTL:Savings = LOC:RegTotalPrice - DTL:TotalCost
+      LOC:RegTotalPrice = InvoiceDetail:Price * InvoiceDetail:QuantityOrdered
+      InvoiceDetail:Discount = LOC:RegTotalPrice * |
+                                             InvoiceDetail:DiscountRate / 100
+      InvoiceDetail:TotalCost = LOC:RegTotalPrice - InvoiceDetail:Discount
+      InvoiceDetail:Savings = LOC:RegTotalPrice - InvoiceDetail:TotalCost
     END
   ELSE
-    IF DTL:DiscountRate = 0 THEN
-      LOC:RegTotalPrice = DTL:Price * DTL:QuantityOrdered
-      DTL:TaxPaid = LOC:RegTotalPrice * DTL:TaxRate / 100
-      DTL:TotalCost = LOC:RegTotalPrice + DTL:TaxPaid
+    IF InvoiceDetail:DiscountRate = 0 THEN
+      LOC:RegTotalPrice = InvoiceDetail:Price * InvoiceDetail:QuantityOrdered
+      InvoiceDetail:TaxPaid = LOC:RegTotalPrice * InvoiceDetail:TaxRate / 100
+      InvoiceDetail:TotalCost = LOC:RegTotalPrice + InvoiceDetail:TaxPaid
     ELSE
-      LOC:RegTotalPrice = DTL:Price * DTL:QuantityOrdered
-      DTL:Discount = LOC:RegTotalPrice * |
-                                             DTL:DiscountRate / 100
-      LOC:DiscTotalPrice = LOC:RegTotalPrice - DTL:Discount
-      DTL:TaxPaid = LOC:DiscTotalPrice * DTL:TaxRate / 100
-      DTL:TotalCost = LOC:DiscTotalPrice + DTL:TaxPaid
-      DTL:Savings = LOC:RegTotalPrice - DTL:TotalCost
+      LOC:RegTotalPrice = InvoiceDetail:Price * InvoiceDetail:QuantityOrdered
+      InvoiceDetail:Discount = LOC:RegTotalPrice * |
+                                             InvoiceDetail:DiscountRate / 100
+      LOC:DiscTotalPrice = LOC:RegTotalPrice - InvoiceDetail:Discount
+      InvoiceDetail:TaxPaid = LOC:DiscTotalPrice * InvoiceDetail:TaxRate / 100
+      InvoiceDetail:TotalCost = LOC:DiscTotalPrice + InvoiceDetail:TaxPaid
+      InvoiceDetail:Savings = LOC:RegTotalPrice - InvoiceDetail:TotalCost
     END
   END
 !Update InvHist and Products files
 !-----------------------------------------------------------------------
 UpdateOtherFiles ROUTINE
 
- PRO:ProductNumber = DTL:ProductNumber
- Access:Products.TryFetch(PRO:KeyProductNumber)
+ Product:ProductID = InvoiceDetail:ProductID
+ Access:Product.TryFetch(Product:ProductIDKey)
  CASE ThisWindow.Request
  OF InsertRecord
-   IF DTL:BackOrdered = FALSE
-     PRO:QuantityInStock -= DTL:QuantityOrdered
-     IF Access:Products.Update() <> Level:Benign
+   IF InvoiceDetail:BackOrdered = FALSE
+     Product:QuantityInStock -= InvoiceDetail:QuantityOrdered
+     IF Access:Product.Update() <> Level:Benign
        STOP(ERROR())
      END !end if
-     INV:Date = TODAY()
-     INV:ProductNumber = DTL:ProductNumber
-     INV:TransType = 'Sale'
-     INV:Quantity =- DTL:QuantityOrdered
-     INV:Cost = PRO:Cost
-     INV:Notes = 'New purchase'
-     IF Access:InvHist.Insert() <> Level:Benign
+     InventoryLog:Date = TODAY()
+     InventoryLog:ProductID = InvoiceDetail:ProductID
+     InventoryLog:TransType = 'Sale'
+     InventoryLog:Quantity =- InvoiceDetail:QuantityOrdered
+     InventoryLog:Cost = Product:Cost
+     InventoryLog:Notes = 'New purchase'
+     IF Access:InventoryLog.Insert() <> Level:Benign
        STOP(ERROR())
      END !end if
    END !end if
  OF ChangeRecord
    IF SAV:BackOrder = FALSE
-     PRO:QuantityInStock += SAV:Quantity
-     PRO:QuantityInStock -= NEW:Quantity
-     IF Access:Products.Update() <> Level:Benign
+     Product:QuantityInStock += SAV:Quantity
+     Product:QuantityInStock -= NEW:Quantity
+     IF Access:Product.Update() <> Level:Benign
        STOP(ERROR())
      END
-     InvHist.Date = TODAY()
-     INV:ProductNumber = DTL:ProductNumber
-     INV:TransType = 'Adj.'
-     INV:Quantity = (SAV:Quantity - NEW:Quantity)
-     INV:Notes = 'Change in quantity purchased'
-     IF Access:InvHist.Insert() <> Level:Benign
+     InventoryLog:Date = TODAY()
+     InventoryLog:ProductID = InvoiceDetail:ProductID
+     InventoryLog:TransType = 'Adj.'
+     InventoryLog:Quantity = (SAV:Quantity - NEW:Quantity)
+     InventoryLog:Notes = 'Change in quantity purchased'
+     IF Access:InventoryLog.Insert() <> Level:Benign
        STOP(ERROR())
      END !end if
-   ELSIF SAV:BackOrder = TRUE AND DTL:BackOrdered = FALSE
-     PRO:QuantityInStock -= DTL:QuantityOrdered
-     IF Access:Products.Update() <> Level:Benign
+   ELSIF SAV:BackOrder = TRUE AND InvoiceDetail:BackOrdered = FALSE
+     Product:QuantityInStock -= InvoiceDetail:QuantityOrdered
+     IF Access:Product.Update() <> Level:Benign
        STOP(ERROR())
      END !end if
-     INV:Date = TODAY()
-     INV:ProductNumber = DTL:ProductNumber
-     INV:TransType = 'Sale'
-     INV:Quantity =- DTL:QuantityOrdered
-     INV:Cost = PRO:Cost
-     INV:Notes = 'New purchase'
-     IF Access:InvHist.Insert() <> Level:Benign
+     InventoryLog:Date = TODAY()
+     InventoryLog:ProductID = InvoiceDetail:ProductID
+     InventoryLog:TransType = 'Sale'
+     InventoryLog:Quantity =- InvoiceDetail:QuantityOrdered
+     InventoryLog:Cost = Product:Cost
+     InventoryLog:Notes = 'New purchase'
+     IF Access:InventoryLog.Insert() <> Level:Benign
        STOP(ERROR())
      END !end if
    END ! end if elsif
  OF DeleteRecord
    IF SAV:BackOrder = FALSE
-     PRO:QuantityInStock += DTL:QuantityOrdered
-     IF Access:Products.Update() <> Level:Benign
+     Product:QuantityInStock += InvoiceDetail:QuantityOrdered
+     IF Access:Product.Update() <> Level:Benign
        STOP(ERROR())
      END
-     INV:Date = TODAY()
-     INV:ProductNumber = DTL:ProductNumber
-     INV:TransType = 'Adj.'
-     INV:Quantity =+ DTL:QuantityOrdered
-     INV:Notes = 'Cancelled Order'
-     IF Access:InvHist.Insert() <> Level:Benign
+     InventoryLog:Date = TODAY()
+     InventoryLog:ProductID = InvoiceDetail:ProductID
+     InventoryLog:TransType = 'Adj.'
+     InventoryLog:Quantity =+ InvoiceDetail:QuantityOrdered
+     InventoryLog:Notes = 'Cancelled Order'
+     IF Access:InventoryLog.Insert() <> Level:Benign
        STOP(ERROR())
      END  !End if
    END !End if
@@ -220,15 +221,15 @@ ReturnValue          BYTE,AUTO
   SELF.Request = GlobalRequest                             ! Store the incoming request
   ReturnValue = PARENT.Init()
   IF ReturnValue THEN RETURN ReturnValue.
-  SELF.FirstField = ?DTL:ProductNumber:Prompt
+  SELF.FirstField = ?InvoiceDetail:ProductNumber:Prompt
   SELF.VCRRequest &= VCRRequest
   SELF.Errors &= GlobalErrors                              ! Set this windows ErrorManager to the global ErrorManager
   SELF.AddItem(Toolbar)
   CLEAR(GlobalRequest)                                     ! Clear GlobalRequest after storing locally
   CLEAR(GlobalResponse)
   !Initializing a variable
-  SAV:Quantity = DTL:QuantityOrdered
-  SAV:BackOrder = DTL:BackOrdered
+  SAV:Quantity = InvoiceDetail:QuantityOrdered
+  SAV:BackOrder = InvoiceDetail:BackOrdered
   CheckFlag = False
   SELF.HistoryKey = 734
   SELF.AddHistoryFile(InvoiceDetail:Record,History::InvoiceDetail:Record)
@@ -262,15 +263,17 @@ ReturnValue          BYTE,AUTO
   END
   SELF.Open(QuickWindow)                                   ! Open window
   IF ThisWindow.Request = ChangeRecord OR ThisWindow.Request = DeleteRecord
-    PRO:ProductNumber = DTL:ProductNumber
-    Access:Products.TryFetch(PRO:KeyProductNumber)
-    ProductDescription = PRO:Description
+    Product:ProductID = InvoiceDetail:ProductID
+    Access:Product.TryFetch(Product:ProductIDKey)
+    ProductDescription = Product:Description
   END
   Do DefineListboxStyle
   QuickWindow{PROP:MinWidth} = 191                         ! Restrict the minimum window width
   QuickWindow{PROP:MinHeight} = 112                        ! Restrict the minimum window height
   Resizer.Init(AppStrategy:Spread)                         ! Controls will spread out as the window gets bigger
   SELF.AddItem(Resizer)                                    ! Add resizer to window manager
+  INIMgr.Fetch('UpdateDetail',QuickWindow)                 ! Restore window settings from non-volatile store
+  Resizer.Resize                                           ! Reset required after window size altered by INI manager
   ToolBarForm.HelpButton=?Help
   SELF.AddItem(ToolbarForm)
   SELF.SetAlerts()
@@ -286,6 +289,9 @@ ReturnValue          BYTE,AUTO
   IF ReturnValue THEN RETURN ReturnValue.
   IF SELF.FilesOpened
     Relate:InventoryLog.Close
+  END
+  IF SELF.Opened
+    INIMgr.Update('UpdateDetail',QuickWindow)              ! Save window data to non-volatile store
   END
   GlobalErrors.SetProcedureName
   RETURN ReturnValue
@@ -309,43 +315,50 @@ ReturnValue          BYTE,AUTO
 
   CODE
   ReturnValue = PARENT.Run(Number,Request)
+  IF SELF.Request = ViewRecord
+    ReturnValue = RequestCancelled                         ! Always return RequestCancelled if the form was opened in ViewRecord mode
+  ELSE
+    GlobalRequest = Request
+    SelectProducts
+    ReturnValue = GlobalResponse
+  END
   ! After lookup and out of stock message
   IF GlobalResponse = RequestCompleted
-    DTL:ProductNumber = PRO:ProductNumber
-    ProductDescription = PRO:Description
-    DTL:Price = PRO:Price
-    LOC:QuantityAvailable = PRO:QuantityInStock
+    InvoiceDetail:ProductID = Product:ProductID
+    ProductDescription = Product:Description
+    InvoiceDetail:Price = Product:Price
+    LOC:QuantityAvailable = Product:QuantityInStock
     DISPLAY
     IF LOC:QuantityAvailable <= 0
       CASE MESSAGE('Yes for BACKORDER or No for CANCEL',|
                    'OUT OF STOCK: Select Order Options',ICON:Question,|
                       BUTTON:Yes+BUTTON:No,BUTTON:Yes,1)
       OF BUTTON:Yes
-        DTL:BackOrdered = TRUE
+        InvoiceDetail:BackOrdered = TRUE
         DISPLAY
-        SELECT(?DTL:QuantityOrdered)
+        SELECT(?InvoiceDetail:QuantityOrdered)
       OF BUTTON:No
         IF ThisWindow.Request = InsertRecord
           ThisWindow.Response = RequestCancelled
-          Access:Detail.CancelAutoInc
+          Access:InvoiceDetail.CancelAutoInc
           POST(EVENT:CloseWindow)
         END !If
       END !end case
     END !end if
     IF ThisWindow.Request = ChangeRecord
-      IF DTL:QuantityOrdered < LOC:QuantityAvailable
-        DTL:BackOrdered = FALSE
+      IF InvoiceDetail:QuantityOrdered < LOC:QuantityAvailable
+        InvoiceDetail:BackOrdered = FALSE
         DISPLAY
       ELSE
-        DTL:BackOrdered = TRUE
+        InvoiceDetail:BackOrdered = TRUE
         DISPLAY
       END !end if
     END !end if
     IF ProductDescription = ''
-      CLEAR(DTL:Price)
+      CLEAR(InvoiceDetail:Price)
       SELECT(?CallLookup)
     END
-    SELECT(?DTL:QuantityOrdered)
+    SELECT(?InvoiceDetail:QuantityOrdered)
   END
   RETURN ReturnValue
 
@@ -366,9 +379,9 @@ Looped BYTE
     CASE ACCEPTED()
     OF ?CallLookup
       ThisWindow.Update
-       = InvoiceDetail:ProductID
-      IF SELF.Run(0,SelectRecord) = RequestCompleted       ! Call lookup procedure and verify RequestCompleted
-        InvoiceDetail:ProductID = 
+      Product:ProductID = InvoiceDetail:ProductID
+      IF SELF.Run(1,SelectRecord) = RequestCompleted       ! Call lookup procedure and verify RequestCompleted
+        InvoiceDetail:ProductID = Product:ProductID
       END
       ThisWindow.Reset(1)
     OF ?InvoiceDetail:QuantityOrdered
@@ -384,6 +397,41 @@ Looped BYTE
           DELETE(FieldColorQueue)
         END
       END
+      !Initializing a variable
+      NEW:Quantity = InvoiceDetail:QuantityOrdered
+       !Low stock message
+      IF CheckFlag = FALSE
+        IF LOC:QuantityAvailable > 0
+          IF InvoiceDetail:QuantityOrdered > LOC:QuantityAvailable
+            CASE MESSAGE('Yes for BACKORDER or No for CANCEL',|
+                           'LOW STOCK: Select Order Options',ICON:Question,|
+                             BUTTON:Yes+BUTTON:No,BUTTON:Yes,1)
+            OF BUTTON:Yes
+              InvoiceDetail:BackOrdered = TRUE
+              DISPLAY
+            OF BUTTON:No
+              IF ThisWindow.Request = InsertRecord
+                ThisWindow.Response = RequestCancelled
+                Access:InvoiceDetail.CancelAutoInc
+                POST(EVENT:CloseWindow)
+              END !
+            END !end case
+          ELSE
+            InvoiceDetail:BackOrdered = FALSE
+            DISPLAY
+          END !end if Detail
+        END !End if LOC:
+        IF ThisWindow.Request = ChangeRecord
+          IF InvoiceDetail:QuantityOrdered <= LOC:QuantityAvailable
+            InvoiceDetail:BackOrdered = FALSE
+            DISPLAY
+          ELSE
+            InvoiceDetail:BackOrdered = TRUE
+            DISPLAY
+          END !end if
+        END !end if
+        CheckFlag = TRUE
+      END !end if
     OF ?OK
       ThisWindow.Update
       !Calculate all totals
@@ -413,6 +461,35 @@ Looped BYTE
    !Updating other files
     DO UpdateOtherFiles
   ReturnValue = PARENT.TakeCompleted()
+    RETURN ReturnValue
+  END
+  ReturnValue = Level:Fatal
+  RETURN ReturnValue
+
+
+ThisWindow.TakeSelected PROCEDURE
+
+ReturnValue          BYTE,AUTO
+
+Looped BYTE
+  CODE
+  LOOP                                                     ! This method receives all Selected events
+    IF Looped
+      RETURN Level:Notify
+    ELSE
+      Looped = 1
+    END
+  ReturnValue = PARENT.TakeSelected()
+    CASE FIELD()
+    OF ?InvoiceDetail:ProductID
+      Product:ProductID = InvoiceDetail:ProductID
+      IF Access:Product.TryFetch(Product:ProductIDKey)
+        IF SELF.Run(1,SelectRecord) = RequestCompleted
+          InvoiceDetail:ProductID = Product:ProductID
+        END
+      END
+      ThisWindow.Reset
+    END
     RETURN ReturnValue
   END
   ReturnValue = Level:Fatal

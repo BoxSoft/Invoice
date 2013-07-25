@@ -41,24 +41,17 @@ REL1::CurrentChoice  LONG                                  ! Current record
 REL1::NewItemLevel   LONG                                  ! Level for a new item
 REL1::NewItemPosition STRING(1024)                         ! POSITION of a new record
 REL1::LoadAll        LONG
-window               WINDOW('Browse Customers Orders In Tree View'),AT(,,312,193),FONT('MS Sans Serif',8,COLOR:Black, |
-  FONT:bold),RESIZE,CENTER,ICON('NOTE14.ICO'),GRAY,IMM,MDI,HLP('~BrowseCustomersOrdersInTreeView'), |
-  PALETTE(256),SYSTEM
-                       LIST,AT(3,17,305,156),USE(?RelTree),FONT('Times New Roman',10,,FONT:bold),VSCROLL,COLOR(,COLOR:White, |
-  COLOR:Blue),FORMAT('800L*ITS(70)@s200@'),FROM(Queue:RelTree),MSG('Ctrl+-> Expand bran' & |
-  'ch,  Ctrl+<<- Contract branch')
-                       BUTTON('Insert'),AT(4,177,48,15),USE(?Insert),FONT(,,COLOR:Green,FONT:bold),LEFT,ICON('Insert.ico'), |
-  FLAT,SKIP,TIP('Insert a record')
-                       BUTTON('Change'),AT(55,177,48,15),USE(?Change),FONT(,8,COLOR:Green,FONT:bold),LEFT,ICON('Edit.ico'), |
-  FLAT,SKIP,TIP('Edit a record')
-                       BUTTON('Delete'),AT(106,177,48,15),USE(?Delete),FONT(,,COLOR:Green,FONT:bold),LEFT,ICON('Delete.ico'), |
-  FLAT,SKIP,TIP('Delete a record')
-                       STRING('Backordered Item'),AT(104,2,89,12),USE(?String1),FONT('MS Sans Serif',10,COLOR:Red, |
-  FONT:bold),CENTER
-                       BUTTON('&Expand All'),AT(161,177,55,15),USE(?Expand),FONT(,,COLOR:Navy,FONT:bold),FLAT,SKIP, |
-  TIP('Expand All Branches')
-                       BUTTON('Co&ntract All'),AT(218,177,55,15),USE(?Contract),FONT(,,COLOR:Navy,FONT:bold),FLAT, |
-  SKIP,TIP('Contract All Branches')
+window               WINDOW('Browse Customers'' Orders In Tree View'),AT(,,312,193),FONT('Tahoma',9,COLOR:Black, |
+  FONT:regular),RESIZE,CENTER,ICON('NOTE14.ICO'),GRAY,IMM,MDI,HLP('~BrowseCustomersOrde' & |
+  'rsInTreeView'),PALETTE(256),SYSTEM
+                       LIST,AT(3,17,305,156),USE(?RelTree),VSCROLL,COLOR(,COLOR:White,COLOR:Blue),FORMAT('800L*ITS(70)@s200@'), |
+  FROM(Queue:RelTree),MSG('Ctrl+-> Expand branch,  Ctrl+<<- Contract branch')
+                       BUTTON('Insert'),AT(4,177,48,15),USE(?Insert),LEFT,ICON('Insert.ico'),FLAT,SKIP,TIP('Insert a record')
+                       BUTTON('Change'),AT(55,177,48,15),USE(?Change),LEFT,ICON('Edit.ico'),FLAT,SKIP,TIP('Edit a record')
+                       BUTTON('Delete'),AT(106,177,48,15),USE(?Delete),LEFT,ICON('Delete.ico'),FLAT,SKIP,TIP('Delete a record')
+                       STRING('Backordered Item'),AT(104,2,89,12),USE(?String1),CENTER
+                       BUTTON('&Expand All'),AT(161,177,55,15),USE(?Expand),FLAT,SKIP,TIP('Expand All Branches')
+                       BUTTON('Co&ntract All'),AT(218,177,55,15),USE(?Contract),FLAT,SKIP,TIP('Contract All Branches')
                        BUTTON,AT(274,143,11,12),USE(?Help),ICON(ICON:Help),HIDE,STD(STD:Help),TIP('Get help')
                        BUTTON,AT(290,177,19,15),USE(?Close),ICON('EXITS.ICO'),FLAT,SKIP,TIP('Exits Browse')
                      END
@@ -215,7 +208,7 @@ REL1::Load:Customer ROUTINE
 !|   formatted and added to the queue Queue:RelTree. This is done in the routine
 !|   REL1::Format:Customer.
 !|
-  REL1::Display = 'CUSTOMERS'''' ORDERS'
+  REL1::Display = 'CUSTOMERS'' ORDERS'
   REL1::Loaded = 0
   REL1::Position = ''
   REL1::Level = 0
@@ -509,13 +502,13 @@ REL1::Format:Invoice ROUTINE
 !|
 !| Next, any icon assigments are made.
 !|
-  CLEAR(DisplayString)
+  DisplayString = 'Invoice# ' & FORMAT(Invoice:InvoiceID,@P######P) &', Order# ' & FORMAT(Invoice:OrderNumber,@P#######P) & ', (' & LEFT(FORMAT(Invoice:OrderDate,@D1)) & ')'
   REL1::Display = DisplayString
-  REL1::NormalFG = -1
+  REL1::NormalFG = 8388608
   REL1::NormalBG = -1
   REL1::SelectedFG = -1
   REL1::SelectedBG = -1
-  REL1::Icon = 0
+  REL1::Icon = 3
 !---------------------------------------------------------------------------
 REL1::Load:InvoiceDetail ROUTINE
 !|
@@ -562,13 +555,29 @@ REL1::Format:InvoiceDetail ROUTINE
 !|
 !| Next, any icon assigments are made.
 !|
+   Product:ProductID = InvoiceDetail:ProductID             ! Move value for lookup
+   Access:Product.Fetch(Product:ProductIDKey)              ! Get value from file
   CLEAR(DisplayString)
+  !Format DisplayString
+  DisplayString = CLIP(Product:Description) & ' ('|
+      & CLIP(LEFT(FORMAT(InvoiceDetail:QuantityOrdered,@N5))) & ' @ '|
+      & CLIP(LEFT(FORMAT(InvoiceDetail:Price,@N$10.2))) & '), Tax = '|
+      & CLIP(LEFT(FORMAT(InvoiceDetail:TaxPaid,@N$10.2))) & ', Discount = '|
+      & CLIP(LEFT(FORMAT(InvoiceDetail:Discount,@N$10.2))) & ', ' & |
+      'Total Cost = '& LEFT(FORMAT(InvoiceDetail:TotalCost,@N$14.2))
   REL1::Display = DisplayString
-  REL1::NormalFG = -1
-  REL1::NormalBG = -1
-  REL1::SelectedFG = -1
-  REL1::SelectedBG = -1
-  REL1::Icon = 0
+  IF InvoiceDetail:BackOrdered
+    REL1::NormalFG = -1
+    REL1::NormalBG = -1
+    REL1::SelectedFG = -1
+    REL1::SelectedBG = -1
+  ELSE
+    REL1::NormalFG = 32768
+    REL1::NormalBG = -1
+    REL1::SelectedFG = -1
+    REL1::SelectedBG = -1
+  END
+  REL1::Icon = 4
 
 REL1::AddEntry ROUTINE
   REL1::Action = InsertRecord
@@ -659,7 +668,7 @@ REL1::AddEntryServer ROUTINE
     Invoice:CustomerID = Customer:CustomerID
     Access:Invoice.PrimeRecord(1)
     GlobalRequest = InsertRecord
-    
+    UpdateOrders
     IF GlobalResponse = RequestCompleted
       REL1::NewItemLevel = 2
       REL1::NewItemPosition = POSITION(Invoice)
@@ -677,7 +686,7 @@ REL1::AddEntryServer ROUTINE
     InvoiceDetail:InvoiceID = Invoice:InvoiceID
     Access:InvoiceDetail.PrimeRecord(1)
     GlobalRequest = InsertRecord
-    
+    UpdateDetail
     IF GlobalResponse = RequestCompleted
       REL1::NewItemLevel = 3
       REL1::NewItemPosition = POSITION(InvoiceDetail)
@@ -723,7 +732,7 @@ REL1::EditEntryServer ROUTINE
     WATCH(Invoice)
     REGET(Invoice,REL1::Position)
     GlobalRequest = ChangeRecord
-    
+    UpdateOrders
     IF GlobalResponse = RequestCompleted
       REL1::NewItemLevel = 1
       REL1::NewItemPosition = POSITION(Invoice)
@@ -733,7 +742,7 @@ REL1::EditEntryServer ROUTINE
     WATCH(InvoiceDetail)
     REGET(InvoiceDetail,REL1::Position)
     GlobalRequest = ChangeRecord
-    
+    UpdateDetail
     IF GlobalResponse = RequestCompleted
       REL1::NewItemLevel = 1
       REL1::NewItemPosition = POSITION(InvoiceDetail)
@@ -775,14 +784,14 @@ REL1::RemoveEntryServer ROUTINE
   OF 2
     REGET(Invoice,REL1::Position)
     GlobalRequest = DeleteRecord
-    
+    UpdateOrders
     IF GlobalResponse = RequestCompleted
       DO REL1::RefreshTree
     END
   OF 3
     REGET(InvoiceDetail,REL1::Position)
     GlobalRequest = DeleteRecord
-    
+    UpdateDetail
     IF GlobalResponse = RequestCompleted
       DO REL1::RefreshTree
     END
@@ -873,10 +882,14 @@ ReturnValue          BYTE,AUTO
   window{PROP:MinHeight} = 193                             ! Restrict the minimum window height
   Resizer.Init(AppStrategy:Spread)                         ! Controls will spread out as the window gets bigger
   SELF.AddItem(Resizer)                                    ! Add resizer to window manager
+  INIMgr.Fetch('BrowseAllOrders',window)                   ! Restore window settings from non-volatile store
+  Resizer.Resize                                           ! Reset required after window size altered by INI manager
   Toolbar.AddTarget(REL1::Toolbar, ?RelTree)
   DO REL1::AssignButtons
   ?RelTree{PROP:IconList,1} = '~File.ico'
   ?RelTree{PROP:IconList,2} = '~Folder.ico'
+  ?RelTree{PROP:IconList,3} = '~Invoice.ico'
+  ?RelTree{PROP:IconList,4} = '~star1.ico'
   ?RelTree{Prop:Selected} = 1
   ?RelTree{PROP:Alrt,255} = CtrlRight
   ?RelTree{PROP:Alrt,254} = CtrlLeft
@@ -894,6 +907,9 @@ ReturnValue          BYTE,AUTO
   IF ReturnValue THEN RETURN ReturnValue.
   IF SELF.FilesOpened
     Relate:Customer.Close
+  END
+  IF SELF.Opened
+    INIMgr.Update('BrowseAllOrders',window)                ! Save window data to non-volatile store
   END
   GlobalErrors.SetProcedureName
   RETURN ReturnValue

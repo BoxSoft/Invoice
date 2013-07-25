@@ -15,17 +15,17 @@ LocalRequest         LONG                                  !
 FilesOpened          BYTE                                  !
 window               WINDOW,AT(,,306,147),FONT('MS Sans Serif',8,COLOR:Black,FONT:regular),NOFRAME,CENTER,COLOR(0080FFFFh), |
   CURSOR('GLOVE.CUR'),GRAY,MDI,PALETTE(256)
-                       PANEL,AT(0,0,306,147),BEVEL(3)
-                       PANEL,AT(7,6,292,134),BEVEL(-2,1)
+                       PANEL,AT(0,0,306,147),USE(?PANEL1),BEVEL(3)
+                       PANEL,AT(7,6,292,134),USE(?PANEL2),BEVEL(-2,1)
                        STRING('ORDER ENTRY '),AT(114,19,178,20),USE(?String2),FONT('Courier New',22,,FONT:bold),CENTER, |
   TRN
                        STRING('&'),AT(114,50,178,20),USE(?String4),FONT('Courier New',22,,FONT:bold),CENTER,TRN
                        STRING('INVOICE SYSTEM'),AT(114,82,178,20),USE(?String3),FONT('Courier New',22,,FONT:bold), |
   CENTER,TRN
                        IMAGE('Alstroemeria.jpg'),AT(12,11,101,102),USE(?Image1)
-                       PANEL,AT(17,111,273,10),BEVEL(-1,1,9)
-                       STRING('Revised using Clarion 6'),AT(11,124,284,12),USE(?String1),FONT('MS Sans Serif',10), |
-  CENTER,TRN
+                       PANEL,AT(17,111,273,10),USE(?PANEL3),BEVEL(-1,1,9)
+                       STRING('Revised by ClarionLive Webinar using Clarion 8'),AT(11,124,284,12),USE(?String1),FONT('MS Sans Serif', |
+  10),CENTER,TRN
                      END
 
 ThisWindow           CLASS(WindowManager)
@@ -56,7 +56,7 @@ ReturnValue          BYTE,AUTO
   SELF.Request = GlobalRequest                             ! Store the incoming request
   ReturnValue = PARENT.Init()
   IF ReturnValue THEN RETURN ReturnValue.
-  SELF.FirstField = ?String2
+  SELF.FirstField = ?PANEL1
   SELF.VCRRequest &= VCRRequest
   SELF.Errors &= GlobalErrors                              ! Set this windows ErrorManager to the global ErrorManager
   SELF.AddItem(Toolbar)

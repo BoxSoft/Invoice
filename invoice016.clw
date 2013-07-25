@@ -10,7 +10,7 @@
 !!! Generated from procedure template - Report
 !!! Report the Customers File
 !!! </summary>
-PrintCUS:StateKey PROCEDURE 
+PrintCustomer:StateKey PROCEDURE 
 
 LocalRequest         LONG                                  !
 FilesOpened          BYTE                                  !
@@ -19,6 +19,8 @@ Process:View         VIEW(Customer)
                        PROJECT(Customer:City)
                        PROJECT(Customer:Company)
                        PROJECT(Customer:Extension)
+                       PROJECT(Customer:FirstName)
+                       PROJECT(Customer:LastName)
                        PROJECT(Customer:PhoneNumber)
                        PROJECT(Customer:StateCode)
                        PROJECT(Customer:ZipCode)
@@ -90,7 +92,7 @@ ThisWindow.Init PROCEDURE
 ReturnValue          BYTE,AUTO
 
   CODE
-  GlobalErrors.SetProcedureName('PrintCUS:StateKey')
+  GlobalErrors.SetProcedureName('PrintCustomer:StateKey')
   SELF.Request = GlobalRequest                             ! Store the incoming request
   ReturnValue = PARENT.Init()
   IF ReturnValue THEN RETURN ReturnValue.
@@ -104,6 +106,7 @@ ReturnValue          BYTE,AUTO
   SELF.FilesOpened = True
   SELF.Open(ProgressWindow)                                ! Open window
   Do DefineListboxStyle
+  INIMgr.Fetch('PrintCustomer:StateKey',ProgressWindow)    ! Restore window settings from non-volatile store
   ProgressMgr.Init(ScrollSort:AllowAlpha+ScrollSort:AllowNumeric,ScrollBy:RunTime)
   ThisReport.Init(Process:View, Relate:Customer, ?Progress:PctText, Progress:Thermometer, ProgressMgr, Customer:StateCode)
   ThisReport.CaseSensitiveValue = FALSE
@@ -132,6 +135,9 @@ ReturnValue          BYTE,AUTO
   IF SELF.FilesOpened
     Relate:Customer.Close
   END
+  IF SELF.Opened
+    INIMgr.Update('PrintCustomer:StateKey',ProgressWindow) ! Save window data to non-volatile store
+  END
   ProgressMgr.Kill()
   GlobalErrors.SetProcedureName
   RETURN ReturnValue
@@ -143,7 +149,7 @@ ReturnValue          BYTE,AUTO
 
 SkipDetails BYTE
   CODE
-  GLOT:CustName = CLIP(CUS:FirstName) & '   ' & CLIP(CUS:LastName)
+  GLOT:CustName = CLIP(Customer:FirstName) & '   ' & CLIP(Customer:LastName)
   ReturnValue = PARENT.TakeRecord()
   PRINT(RPT:detail)
   RETURN ReturnValue

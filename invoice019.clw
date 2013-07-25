@@ -18,7 +18,12 @@ Progress:Thermometer BYTE                                  !
 Process:View         VIEW(Invoice)
                        PROJECT(Invoice:CustomerID)
                        PROJECT(Invoice:OrderNumber)
+                       PROJECT(Invoice:ShipAddress1)
+                       PROJECT(Invoice:ShipAddress2)
+                       PROJECT(Invoice:ShipCity)
+                       PROJECT(Invoice:ShipState)
                        PROJECT(Invoice:ShipToName)
+                       PROJECT(Invoice:ShipZip)
                      END
 ProgressWindow       WINDOW('Report Progress...'),AT(,,142,59),DOUBLE,CENTER,GRAY,TIMER(1)
                        PROGRESS,AT(15,15,111,12),USE(Progress:Thermometer),RANGE(0,100)
@@ -78,6 +83,7 @@ ReturnValue          BYTE,AUTO
   SELF.FilesOpened = True
   SELF.Open(ProgressWindow)                                ! Open window
   Do DefineListboxStyle
+  INIMgr.Fetch('PrintMailingLabels',ProgressWindow)        ! Restore window settings from non-volatile store
   ProgressMgr.Init(ScrollSort:AllowNumeric,)
   ThisReport.Init(Process:View, Relate:Invoice, ?Progress:PctText, Progress:Thermometer, ProgressMgr, Invoice:CustomerID)
   ThisReport.AddSortOrder(Invoice:KeyCustOrderNumber)
@@ -105,6 +111,9 @@ ReturnValue          BYTE,AUTO
   IF SELF.FilesOpened
     Relate:Invoice.Close
   END
+  IF SELF.Opened
+    INIMgr.Update('PrintMailingLabels',ProgressWindow)     ! Save window data to non-volatile store
+  END
   ProgressMgr.Kill()
   GlobalErrors.SetProcedureName
   RETURN ReturnValue
@@ -116,8 +125,8 @@ ReturnValue          BYTE,AUTO
 
 SkipDetails BYTE
   CODE
-  GLOT:ShipAddress = CLIP(ORD:ShipAddress1) & '    ' & CLIP(ORD:ShipAddress2)
-  GLOT:ShipCSZ = CLIP(ORD:ShipCity) & ',  ' & ORD:ShipState & '    ' & CLIP(ORD:ShipZip)
+  GLOT:ShipAddress = CLIP(Invoice:ShipAddress1) & '    ' & CLIP(Invoice:ShipAddress2)
+  GLOT:ShipCSZ = CLIP(Invoice:ShipCity) & ',  ' & Invoice:ShipState & '    ' & CLIP(Invoice:ShipZip)
   ReturnValue = PARENT.TakeRecord()
   PRINT(RPT:detail)
   RETURN ReturnValue

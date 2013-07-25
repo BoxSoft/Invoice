@@ -10,7 +10,7 @@
 !!! Generated from procedure template - Report
 !!! Report the Products File
 !!! </summary>
-PrintPRO:KeyProductSKU PROCEDURE 
+PrintProduct:KeyProductSKU PROCEDURE 
 
 LocalRequest         LONG                                  !
 FilesOpened          BYTE                                  !
@@ -89,7 +89,7 @@ ThisWindow.Init PROCEDURE
 ReturnValue          BYTE,AUTO
 
   CODE
-  GlobalErrors.SetProcedureName('PrintPRO:KeyProductSKU')
+  GlobalErrors.SetProcedureName('PrintProduct:KeyProductSKU')
   SELF.Request = GlobalRequest                             ! Store the incoming request
   ReturnValue = PARENT.Init()
   IF ReturnValue THEN RETURN ReturnValue.
@@ -103,6 +103,7 @@ ReturnValue          BYTE,AUTO
   SELF.FilesOpened = True
   SELF.Open(ProgressWindow)                                ! Open window
   Do DefineListboxStyle
+  INIMgr.Fetch('PrintProduct:KeyProductSKU',ProgressWindow) ! Restore window settings from non-volatile store
   ProgressMgr.Init(ScrollSort:AllowAlpha+ScrollSort:AllowNumeric,ScrollBy:RunTime)
   ThisReport.Init(Process:View, Relate:Product, ?Progress:PctText, Progress:Thermometer, ProgressMgr, Product:ProductSKU)
   ThisReport.CaseSensitiveValue = FALSE
@@ -130,6 +131,9 @@ ReturnValue          BYTE,AUTO
   IF ReturnValue THEN RETURN ReturnValue.
   IF SELF.FilesOpened
     Relate:Product.Close
+  END
+  IF SELF.Opened
+    INIMgr.Update('PrintProduct:KeyProductSKU',ProgressWindow) ! Save window data to non-volatile store
   END
   ProgressMgr.Kill()
   GlobalErrors.SetProcedureName

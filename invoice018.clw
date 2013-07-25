@@ -23,6 +23,7 @@ Process:View         VIEW(InvoiceDetail)
                        PROJECT(InvoiceDetail:Discount)
                        PROJECT(InvoiceDetail:InvoiceID)
                        PROJECT(InvoiceDetail:LineNumber)
+                       PROJECT(InvoiceDetail:Price)
                        PROJECT(InvoiceDetail:QuantityOrdered)
                        PROJECT(InvoiceDetail:TaxPaid)
                        PROJECT(InvoiceDetail:TotalCost)
@@ -39,7 +40,7 @@ FDB2::View:FileDrop  VIEW(Invoice)
                        PROJECT(Invoice:ShipToName)
                        PROJECT(Invoice:InvoiceID)
                      END
-Queue:FileDrop       QUEUE                            !Queue declaration for browse/combo box using ?ORD:InvoiceNumber:2
+Queue:FileDrop       QUEUE                            !Queue declaration for browse/combo box using ?Invoice:InvoiceNumber:2
 Invoice:InvoiceNumber  LIKE(Invoice:InvoiceNumber)    !List box control field - type derived from field
 Invoice:OrderDate      LIKE(Invoice:OrderDate)        !List box control field - type derived from field
 Invoice:ShipToName     LIKE(Invoice:ShipToName)       !List box control field - type derived from field
@@ -53,8 +54,8 @@ ProgressWindow       WINDOW('Report Progress...'),AT(,,168,94),DOUBLE,CENTER,GRA
                        STRING(''),AT(3,30,162,10),USE(?Progress:PctText),CENTER
                        STRING('Select An Invoice And Press Go To Preview'),AT(2,44,164,10),USE(?String3),FONT(,,COLOR:Maroon, |
   FONT:bold),CENTER
-                       LIST,AT(9,60,150,12),USE(Invoice:InvoiceNumber,,?ORD:InvoiceNumber:2),VSCROLL,DROP(5),FORMAT('33L(3)|~In' & |
-  'voice #~L(2)@n07@41L(3)|~Order Date~L(2)@d1@180L(2)|~Ship To~@s45@'),FROM(Queue:FileDrop),MSG('Invoice number for each order')
+                       LIST,AT(9,60,150,12),USE(Invoice:InvoiceNumber,,?Invoice:InvoiceNumber:2),VSCROLL,DROP(5), |
+  FORMAT('33L(3)|~Invoice #~L(2)@n07@41L(3)|~Order Date~L(2)@d1@180L(2)|~Ship To~@s45@'),FROM(Queue:FileDrop),MSG('Invoice number for each order')
                        BUTTON('Exit'),AT(115,77,44,13),USE(?Progress:Cancel),FONT(,,COLOR:Green,FONT:bold),LEFT,ICON(ICON:NoPrint), |
   TIP('Exit window or cancel printing')
                        BUTTON('Pause'),AT(9,77,44,13),USE(?Pause),FONT(,,COLOR:Green,FONT:bold),LEFT,ICON(ICON:Print1), |
@@ -112,13 +113,14 @@ detail                 DETAIL,AT(,,,242),USE(?detail)
                          STRING(@n7),AT(5635,42,635,167),USE(InvoiceDetail:QuantityOrdered),RIGHT(100)
                          STRING(@n$10.2),AT(6458,42,823,167),USE(ExtendPrice),DECIMAL(250)
                          STRING(@n$10.2),AT(4552,42,771,167),USE(Product:Price),DECIMAL(250)
-                         STRING(@n$10.2B),AT(5635,10,63,52),USE(InvoiceDetail:TaxPaid,,?DTL:TaxPaid:2),HIDE,TRN
+                         STRING(@n$10.2B),AT(5635,10,63,52),USE(InvoiceDetail:TaxPaid,,?InvoiceDetail:TaxPaid:2),HIDE, |
+  TRN
                        END
 detail1                DETAIL,AT(,,,967),USE(?detail1)
                          LINE,AT(83,10,7232,0),USE(?Line4),COLOR(COLOR:Black),LINEWIDTH(2)
                          STRING('Sub-total:'),AT(5594,52,813,198),USE(?String23),FONT(,,,FONT:bold),LEFT(50),TRN
-                         STRING(@n$10.2),AT(6458,250,844,167),USE(InvoiceDetail:Discount,,?DTL:Discount:2),DECIMAL(250), |
-  SUM,TALLY(detail)
+                         STRING(@n$10.2),AT(6458,250,844,167),USE(InvoiceDetail:Discount,,?InvoiceDetail:Discount:2), |
+  DECIMAL(250),SUM,TALLY(detail)
                          STRING(@n$10.2),AT(6448,52,844,198),USE(ExtendPrice,,?ExtendPrice:2),DECIMAL(250),SUM,TALLY(detail), |
   TRN
                          STRING('Discount:'),AT(5604,250,781,167),USE(?String24),LEFT(50)
@@ -130,8 +132,8 @@ detail1                DETAIL,AT(,,,967),USE(?detail1)
                          STRING('Total:'),AT(5594,667,583,198),USE(?String30),FONT(,,,FONT:bold),LEFT(50),TRN
                          LINE,AT(6354,875,962,0),USE(?Line6),COLOR(COLOR:Black),LINEWIDTH(2)
                          LINE,AT(6354,906,962,0),USE(?Line7),COLOR(COLOR:Black),LINEWIDTH(2)
-                         STRING(@n$14.2),AT(6240,656,1052,208),USE(InvoiceDetail:TotalCost,,?DTL:TotalCost:2),DECIMAL(250), |
-  SUM,TALLY(detail),TRN
+                         STRING(@n$14.2),AT(6240,656,1052,208),USE(InvoiceDetail:TotalCost,,?InvoiceDetail:TotalCost:2), |
+  DECIMAL(250),SUM,TALLY(detail),TRN
                        END
                        FOOTER,AT(500,10021,7500,275)
                          STRING('Thank You For Your Order, Please Call Again.'),AT(21,10,7438,208),USE(?String22),FONT('MS Sans Serif', |
@@ -200,16 +202,17 @@ ReturnValue          BYTE,AUTO
   SELF.FilesOpened = True
   SELF.Open(ProgressWindow)                                ! Open window
   Do DefineListboxStyle
+  INIMgr.Fetch('PrintInvoice',ProgressWindow)              ! Restore window settings from non-volatile store
   ProgressMgr.Init(ScrollSort:AllowNumeric,)
   ThisReport.Init(Process:View, Relate:InvoiceDetail, ?Progress:PctText, Progress:Thermometer, ProgressMgr, InvoiceDetail:InvoiceID)
   ThisReport.AddSortOrder(InvoiceDetail:InvoiceKey)
-  ThisReport.SetFilter('DTL:CustNumber=ORD:CustNumber AND DTL:OrderNumber=ORD:OrderNumber')
+  ThisReport.SetFilter('InvoiceDetail:CustNumber=Invoice:CustNumber AND InvoiceDetail:OrderNumber=Invoice:OrderNumber')
   SELF.AddItem(?Progress:Cancel,RequestCancelled)
   SELF.Init(ThisReport,Report,Previewer)
   ?Progress:UserString{PROP:Text} = ''
   Relate:InvoiceDetail.SetQuickScan(1,Propagate:OneMany)
   ProgressWindow{PROP:Timer} = 10                          ! Assign timer interval
-  FDB2.Init(?ORD:InvoiceNumber:2,Queue:FileDrop.ViewPosition,FDB2::View:FileDrop,Queue:FileDrop,Relate:Invoice,ThisWindow)
+  FDB2.Init(?Invoice:InvoiceNumber:2,Queue:FileDrop.ViewPosition,FDB2::View:FileDrop,Queue:FileDrop,Relate:Invoice,ThisWindow)
   FDB2.Q &= Queue:FileDrop
   FDB2.AddSortOrder(Invoice:InvoiceNumberKey)
   FDB2.AddField(Invoice:InvoiceNumber,FDB2.Q.Invoice:InvoiceNumber) !List box control field - type derived from field
@@ -245,6 +248,9 @@ ReturnValue          BYTE,AUTO
   IF SELF.FilesOpened
     Relate:Company.Close
     Relate:Customer.Close
+  END
+  IF SELF.Opened
+    INIMgr.Update('PrintInvoice',ProgressWindow)           ! Save window data to non-volatile store
   END
   ProgressMgr.Kill()
   GlobalErrors.SetProcedureName
@@ -359,15 +365,14 @@ ReturnValue          BYTE,AUTO
 SkipDetails BYTE
   CODE
   !Get Customer records
-  CUS:CustNumber=ORD:CustNumber
-  Access:Customers.Fetch(CUS:KeyCustNumber)
-  ExtendPrice = DTL:Price * DTL:QuantityOrdered
-  GLOT:CustName = CLIP(CUS:FirstName) & '   ' & CLIP(CUS:LastName)
-  GLOT:CustAddress = CLIP(CUS:Address1) & '    ' & CLIP(CUS:Address2)
-  GLOT:CusCSZ = CLIP(CUS:City) & ',   ' & CUS:State & '    ' & CLIP(CUS:ZipCode)
-  GLOT:ShipName = CLIP(ORD:ShipToName)
-  GLOT:ShipAddress = CLIP(ORD:ShipAddress1) & '   ' & CLIP(ORD:ShipAddress2)
-  GLOT:ShipCSZ = CLIP(ORD:ShipCity) & ',  ' & ORD:ShipState & '    ' & CLIP(ORD:ShipZip)
+  Customer:CustomerID=Invoice:CustomerID
+  Access:Customer.Fetch(Customer:CustomerIDKey)
+  ExtendPrice = InvoiceDetail:Price * InvoiceDetail:QuantityOrdered
+  GLOT:CustName = CLIP(Customer:FirstName) & '   ' & CLIP(Customer:LastName)
+  GLOT:CustAddress = CLIP(Customer:Address1) & '    ' & CLIP(Customer:Address2)
+  GLOT:ShipName = CLIP(Invoice:ShipToName)
+  GLOT:ShipAddress = CLIP(Invoice:ShipAddress1) & '   ' & CLIP(Invoice:ShipAddress2)
+  GLOT:ShipCSZ = CLIP(Invoice:ShipCity) & ',  ' & Invoice:ShipState & '    ' & CLIP(Invoice:ShipZip)
   ReturnValue = PARENT.TakeRecord()
   PRINT(RPT:detail)
   RETURN ReturnValue

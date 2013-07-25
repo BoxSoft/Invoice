@@ -21,8 +21,8 @@ MenuStyleMgr MenuStyleManager
 DisplayDayString STRING('Sunday   Monday   Tuesday  WednesdayThursday Friday   Saturday ')
 DisplayDayText   STRING(9),DIM(7),OVER(DisplayDayString)
 AppFrame             APPLICATION('Order Entry & Invoice Manager'),AT(,,437,310),FONT('MS Sans Serif',8),RESIZE, |
-  ALRT(F3Key),ALRT(F4Key),ALRT(F5Key),CENTER,ICON('ORDER.ICO'),MAX,HLP('~MainToolBar'),STATUS(-1, |
-  80,120,45),SYSTEM,WALLPAPER('Invoice.bmp'),IMM
+  MAXIMIZE,ALRT(F3Key),ALRT(F4Key),ALRT(F5Key),CENTER,ICON('ORDER.ICO'),MAX,HLP('~MainToolBar'), |
+  STATUS(-1,80,120,45),SYSTEM,IMM
                        MENUBAR,USE(?MENUBAR1),FONT(,,COLOR:MENUTEXT)
                          MENU('&File'),USE(?MENU1)
                            ITEM('&Print Setup ...'),USE(?PrintSetup),MSG('Setup printer'),STD(STD:PrintSetup)
@@ -48,10 +48,10 @@ AppFrame             APPLICATION('Order Entry & Invoice Manager'),AT(,,437,310),
                            ITEM,USE(?SEPARATOR2),SEPARATOR
                            ITEM('Select CWRW Report'),USE(?ReportsSelectCWRWReport)
                            ITEM,USE(?SEPARATOR3),SEPARATOR
-                           ITEM('Print Products Information'),USE(?PrintPRO:KeyProductSKU),MSG('Print ordered by t' & |
-  'he PRO:KeyProductSKU key')
-                           ITEM('Print Customer''s Information'),USE(?PrintCUS:StateKey),MSG('Print ordered by the' & |
-  ' CUS:Statekey')
+                           ITEM('Print Products Information'),USE(?PrintProduct:KeyProductSKU),MSG('Print ordered ' & |
+  'by the Product:KeyProductSKU key')
+                           ITEM('Print Customer''s Information'),USE(?PrintCustomer:StateKey),MSG('Print ordered b' & |
+  'y the Customer:Statekey')
                          END
                          MENU('&Maintenance'),USE(?Maintenance)
                            ITEM('&Update Company File'),USE(?UpdateCompanyFile)
@@ -146,10 +146,10 @@ Menu::ReportMenu ROUTINE                                   ! Code for menu items
       RE.PrintReport(0)                           ! select report to preview/print
       RE.UnloadReportLibrary
     END
-  OF ?PrintPRO:KeyProductSKU
-    START(PrintPRO:KeyProductSKU, 050000)
-  OF ?PrintCUS:StateKey
-    START(PrintCUS:StateKey, 050000)
+  OF ?PrintProduct:KeyProductSKU
+    START(PrintProduct:KeyProductSKU, 050000)
+  OF ?PrintCustomer:StateKey
+    START(PrintCustomer:StateKey, 050000)
   END
 Menu::Maintenance ROUTINE                                  ! Code for menu items on ?Maintenance
   CASE ACCEPTED()
@@ -207,9 +207,6 @@ ReturnValue          BYTE,AUTO
   CODE
   ReturnValue = PARENT.Kill()
   IF ReturnValue THEN RETURN ReturnValue.
-  IF SELF.FilesOpened
-    
-  END
   IF Status(Company) > 0
     Relate:Company.Close()  !Close file
   END

@@ -226,7 +226,7 @@ ReturnValue          BYTE,AUTO
   SELF.AddItem(Toolbar)
   CLEAR(GlobalRequest)                                     ! Clear GlobalRequest after storing locally
   CLEAR(GlobalResponse)
-  GLOT:CustName = CLIP(CUS:FirstName) & '   ' & CLIP(CUS:LastName)
+  GLOT:CustName = CLIP(Customer:FirstName) & '   ' & CLIP(Customer:LastName)
   IF SELF.Request = SelectRecord
      SELF.AddItem(?Close,RequestCancelled)                 ! Add the close control to the window manger
   ELSE
@@ -284,6 +284,8 @@ ReturnValue          BYTE,AUTO
   QuickWindow{PROP:MinHeight} = 193                        ! Restrict the minimum window height
   Resizer.Init(AppStrategy:Spread)                         ! Controls will spread out as the window gets bigger
   SELF.AddItem(Resizer)                                    ! Add resizer to window manager
+  INIMgr.Fetch('BrowseOrders',QuickWindow)                 ! Restore window settings from non-volatile store
+  Resizer.Resize                                           ! Reset required after window size altered by INI manager
   OrdersBrowse.AskProcedure = 1
   DetailBrowse.AskProcedure = 2
   OrdersBrowse.AddToolbarTarget(Toolbar)                   ! Browse accepts toolbar control
@@ -303,6 +305,9 @@ ReturnValue          BYTE,AUTO
   IF ReturnValue THEN RETURN ReturnValue.
   IF SELF.FilesOpened
     Relate:Customer.Close
+  END
+  IF SELF.Opened
+    INIMgr.Update('BrowseOrders',QuickWindow)              ! Save window data to non-volatile store
   END
   GlobalErrors.SetProcedureName
   RETURN ReturnValue
@@ -399,8 +404,8 @@ OrdersBrowse.ResetQueue PROCEDURE(BYTE ResetMode)
 OrdersBrowse.SetQueueRecord PROCEDURE
 
   CODE
-  GLOT:ShipCSZ = CLIP(ORD:ShipCity) & ',  ' & ORD:ShipState & '   ' & CLIP(ORD:ShipZip)
-  IF (ORD:OrderShipped)
+  GLOT:ShipCSZ = CLIP(Invoice:ShipCity) & ',  ' & Invoice:ShipState & '   ' & CLIP(Invoice:ShipZip)
+  IF (Invoice:OrderShipped)
     LOC:Shipped = 'Yes'
   ELSE
     LOC:Shipped = 'No'
@@ -449,9 +454,9 @@ TotalCost:Sum        REAL                                  ! Sum variable for br
       RETURN
     END
     SELF.SetQueueRecord
-    TotalTax:Sum += DTL:TaxPaid
-    TotalDiscount:Sum += DTL:Discount
-    TotalCost:Sum += DTL:TotalCost
+    TotalTax:Sum += InvoiceDetail:TaxPaid
+    TotalDiscount:Sum += InvoiceDetail:Discount
+    TotalCost:Sum += InvoiceDetail:TotalCost
   END
   SELF.View{PROP:IPRequestCount} = 0
   TotalTax = TotalTax:Sum
@@ -465,7 +470,7 @@ TotalCost:Sum        REAL                                  ! Sum variable for br
 DetailBrowse.SetQueueRecord PROCEDURE
 
   CODE
-  IF (DTL:BackOrdered)
+  IF (InvoiceDetail:BackOrdered)
     LOC:Backorder = 'Yes'
   ELSE
     LOC:Backorder = 'No'

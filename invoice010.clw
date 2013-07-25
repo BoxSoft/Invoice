@@ -122,7 +122,6 @@ BRW1                 CLASS(BrowseClass)                    ! Browse using ?Brows
 Q                      &Queue:Browse:1                !Reference to browse queue
 Init                   PROCEDURE(SIGNED ListBox,*STRING Posit,VIEW V,QUEUE Q,RelationManager RM,WindowManager WM)
 ResetSort              PROCEDURE(BYTE Force),BYTE,PROC,DERIVED
-SetQueueRecord         PROCEDURE(),DERIVED
                      END
 
 BRW1::Sort0:Locator  FilterLocatorClass                    ! Default Locator
@@ -224,6 +223,8 @@ ReturnValue          BYTE,AUTO
   QuickWindow{PROP:MinHeight} = 209                        ! Restrict the minimum window height
   Resizer.Init(AppStrategy:Spread)                         ! Controls will spread out as the window gets bigger
   SELF.AddItem(Resizer)                                    ! Add resizer to window manager
+  INIMgr.Fetch('BrowseCustomers',QuickWindow)              ! Restore window settings from non-volatile store
+  Resizer.Resize                                           ! Reset required after window size altered by INI manager
   BRW1.QueryControl = ?Query
   BRW1.Query &= QBE6
   QBE6.AddItem('UPPER(Customer:FirstName)','FirstName','@s20',1)
@@ -249,6 +250,9 @@ ReturnValue          BYTE,AUTO
   IF ReturnValue THEN RETURN ReturnValue.
   IF SELF.FilesOpened
     Relate:Customer.Close
+  END
+  IF SELF.Opened
+    INIMgr.Update('BrowseCustomers',QuickWindow)           ! Save window data to non-volatile store
   END
   GlobalErrors.SetProcedureName
   RETURN ReturnValue
@@ -331,14 +335,6 @@ ReturnValue          BYTE,AUTO
   END
   ReturnValue = PARENT.ResetSort(Force)
   RETURN ReturnValue
-
-
-BRW1.SetQueueRecord PROCEDURE
-
-  CODE
-  GLOT:CusCSZ = CLIP(CUS:City) & ',  ' & CUS:State & '   ' & CLIP(CUS:ZipCode)
-  PARENT.SetQueueRecord
-  
 
 
 Resizer.Init PROCEDURE(BYTE AppStrategy=AppStrategy:Resize,BYTE SetWindowMinSize=False,BYTE SetWindowMaxSize=False)

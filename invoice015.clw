@@ -30,23 +30,23 @@ QuickWindow          WINDOW('Update Products'),AT(,,288,130),FONT('MS Sans Serif
                          TAB('Tab 1'),USE(?Tab1)
                          END
                        END
-                       PROMPT('Product SKU:'),AT(7,9),USE(?PRO:ProductSKU:Prompt)
+                       PROMPT('Product SKU:'),AT(7,9),USE(?Product:ProductSKU:Prompt)
                        ENTRY(@s10),AT(70,9,44,10),USE(Product:ProductSKU),LEFT(1),UPR,MSG('User defined Product Number'), |
   REQ
-                       PROMPT('Description:'),AT(7,25),USE(?PRO:Description:Prompt)
+                       PROMPT('Description:'),AT(7,25),USE(?Product:Description:Prompt)
                        ENTRY(@s35),AT(70,25,101,10),USE(Product:Description),LEFT(1),CAP,MSG('Enter Product''s' & |
   ' Description'),REQ
-                       PROMPT('Price:'),AT(7,41,29,10),USE(?PRO:Price:Prompt)
+                       PROMPT('Price:'),AT(7,41,29,10),USE(?Product:Price:Prompt)
                        ENTRY(@n$10.2B),AT(70,41,35,10),USE(Product:Price),DECIMAL(12),MSG('Enter Product''s Price')
-                       PROMPT('Cost:'),AT(7,57,23,10),USE(?PRO:Cost:Prompt)
+                       PROMPT('Cost:'),AT(7,57,23,10),USE(?Product:Cost:Prompt)
                        ENTRY(@n$10.2B),AT(70,57,35,10),USE(Product:Cost),DECIMAL(12),MSG('Enter product''s cost')
                        ENTRY(@n-10.2),AT(70,73,35,10),USE(Product:QuantityInStock),DECIMAL(12),MSG('Enter quan' & |
   'tity of product in stock')
-                       PROMPT('Quantity In Stock:'),AT(7,73,60,10),USE(?PRO:QuantityInStock:Prompt)
-                       PROMPT('Reorder Quantity:'),AT(7,89,59,10),USE(?PRO:ReorderQuantity:Prompt)
+                       PROMPT('Quantity In Stock:'),AT(7,73,60,10),USE(?Product:QuantityInStock:Prompt)
+                       PROMPT('Reorder Quantity:'),AT(7,89,59,10),USE(?Product:ReorderQuantity:Prompt)
                        ENTRY(@n9.2),AT(70,89,35,10),USE(Product:ReorderQuantity),DECIMAL(12),MSG('Enter produc' & |
   't''s quantity for re-order')
-                       PROMPT('Picture File:'),AT(7,105),USE(?PRO:PictureFile:Prompt)
+                       PROMPT('Picture File:'),AT(7,105),USE(?Product:PictureFile:Prompt)
                        ENTRY(@s64),AT(70,105,101,10),USE(Product:PictureFile),LEFT(1),DISABLE,MSG('Path of graphic file')
                        BUTTON('Select Image'),AT(110,87,65,14),USE(?LookupFile),FONT(,,COLOR:Navy,FONT:bold),TIP('Insert or ' & |
   'Change Image')
@@ -105,7 +105,7 @@ ThisWindow.Ask PROCEDURE
   QuickWindow{PROP:Text} = ActionMessage                   ! Display status message in title bar
   CASE SELF.Request
   OF ChangeRecord OROF DeleteRecord
-    QuickWindow{PROP:Text} = QuickWindow{PROP:Text} & '  (' & CLIP(PRO:Description) & ')' ! Append status message to window title text
+    QuickWindow{PROP:Text} = QuickWindow{PROP:Text} & '  (' & CLIP(Product:Description) & ')' ! Append status message to window title text
   OF InsertRecord
     QuickWindow{PROP:Text} = QuickWindow{PROP:Text} & '  (New)'
   END
@@ -121,7 +121,7 @@ ReturnValue          BYTE,AUTO
   SELF.Request = GlobalRequest                             ! Store the incoming request
   ReturnValue = PARENT.Init()
   IF ReturnValue THEN RETURN ReturnValue.
-  SELF.FirstField = ?PRO:ProductSKU:Prompt
+  SELF.FirstField = ?Product:ProductSKU:Prompt
   SELF.VCRRequest &= VCRRequest
   SELF.Errors &= GlobalErrors                              ! Set this windows ErrorManager to the global ErrorManager
   SELF.AddItem(Toolbar)
@@ -162,8 +162,9 @@ ReturnValue          BYTE,AUTO
   QuickWindow{PROP:MaxHeight} = 127                        ! Restrict the maximum window height
   Resizer.Init(AppStrategy:NoResize)                       ! Don't change the windows controls when window resized
   SELF.AddItem(Resizer)                                    ! Add resizer to window manager
+  INIMgr.Fetch('UpdateProducts',QuickWindow)               ! Restore window settings from non-volatile store
   IF SELF.Request = ChangeRecord OR SELF.Request = DeleteRecord
-    ?Image1{PROP:TEXT} = Products.Record.PictureFile
+    ?Image1{PROP:TEXT} = Product:PictureFile
   END
   ToolBarForm.HelpButton=?Help
   SELF.AddItem(ToolbarForm)
@@ -186,6 +187,9 @@ ReturnValue          BYTE,AUTO
   IF ReturnValue THEN RETURN ReturnValue.
   IF SELF.FilesOpened
     Relate:Product.Close
+  END
+  IF SELF.Opened
+    INIMgr.Update('UpdateProducts',QuickWindow)            ! Save window data to non-volatile store
   END
   GlobalErrors.SetProcedureName
   RETURN ReturnValue
@@ -235,7 +239,7 @@ Looped BYTE
           END
         END
         IF LOC:FileName[1 : (X#-1)] = LONGPATH(PATH())
-          PRO:PictureFile = UPPER(LOC:FileName[(X#+1) : LX#])
+          Product:PictureFile = UPPER(LOC:FileName[(X#+1) : LX#])
           DISPLAY
         END
       END

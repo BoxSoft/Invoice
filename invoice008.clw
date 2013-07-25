@@ -22,6 +22,7 @@ Process:View         VIEW(InvoiceDetail)
                        PROJECT(InvoiceDetail:Discount)
                        PROJECT(InvoiceDetail:InvoiceID)
                        PROJECT(InvoiceDetail:LineNumber)
+                       PROJECT(InvoiceDetail:Price)
                        PROJECT(InvoiceDetail:QuantityOrdered)
                        PROJECT(InvoiceDetail:TaxPaid)
                        PROJECT(InvoiceDetail:TotalCost)
@@ -90,13 +91,14 @@ detail                 DETAIL,AT(,,,242),USE(?detail)
                          STRING(@n7),AT(5635,42,635,167),USE(InvoiceDetail:QuantityOrdered),RIGHT(100)
                          STRING(@n$10.2),AT(6458,42,823,167),USE(ExtendPrice),DECIMAL(250)
                          STRING(@n$10.2),AT(4552,42,771,167),USE(Product:Price),DECIMAL(250)
-                         STRING(@n$10.2B),AT(5635,10,63,52),USE(InvoiceDetail:TaxPaid,,?DTL:TaxPaid:2),HIDE,TRN
+                         STRING(@n$10.2B),AT(5635,10,63,52),USE(InvoiceDetail:TaxPaid,,?InvoiceDetail:TaxPaid:2),HIDE, |
+  TRN
                        END
 detail1                DETAIL,AT(,,,967),USE(?detail1)
                          LINE,AT(83,10,7232,0),USE(?Line3),COLOR(COLOR:Black),LINEWIDTH(3)
                          STRING('Sub-total:'),AT(5594,52,813,198),USE(?String23),FONT(,,,FONT:bold),LEFT(50),TRN
-                         STRING(@n$10.2),AT(6417,240,844,167),USE(InvoiceDetail:Discount,,?DTL:Discount:2),DECIMAL(250), |
-  SUM,TALLY(detail)
+                         STRING(@n$10.2),AT(6417,240,844,167),USE(InvoiceDetail:Discount,,?InvoiceDetail:Discount:2), |
+  DECIMAL(250),SUM,TALLY(detail)
                          STRING(@n$10.2),AT(6417,52,844,198),USE(ExtendPrice,,?ExtendPrice:2),DECIMAL(250),SUM,TALLY(detail), |
   TRN
                          STRING('Discount:'),AT(5594,240,781,167),USE(?String24),LEFT(50)
@@ -108,8 +110,8 @@ detail1                DETAIL,AT(,,,967),USE(?detail1)
                          LINE,AT(6350,875,962,0),USE(?Line5),COLOR(COLOR:Black),LINEWIDTH(3)
                          LINE,AT(6350,917,962,0),USE(?Line6),COLOR(COLOR:Black),LINEWIDTH(3)
                          STRING('Total:'),AT(5594,677,583,198),USE(?String30),FONT(,,,FONT:bold),LEFT(50),TRN
-                         STRING(@n$14.2),AT(6208,677,1052,208),USE(InvoiceDetail:TotalCost,,?DTL:TotalCost:2),DECIMAL(250), |
-  SUM,TALLY(detail),TRN
+                         STRING(@n$14.2),AT(6208,677,1052,208),USE(InvoiceDetail:TotalCost,,?InvoiceDetail:TotalCost:2), |
+  DECIMAL(250),SUM,TALLY(detail),TRN
                        END
                        FOOTER,AT(500,10021,7500,275)
                          STRING('Thank You For Your Order, Please Call Again.'),AT(21,10,7438,208),USE(?String22),FONT('MS Sans Serif', |
@@ -169,10 +171,11 @@ ReturnValue          BYTE,AUTO
   SELF.FilesOpened = True
   SELF.Open(ProgressWindow)                                ! Open window
   Do DefineListboxStyle
+  INIMgr.Fetch('PrintInvoiceFromBrowse',ProgressWindow)    ! Restore window settings from non-volatile store
   ProgressMgr.Init(ScrollSort:AllowNumeric,)
   ThisReport.Init(Process:View, Relate:InvoiceDetail, ?Progress:PctText, Progress:Thermometer, ProgressMgr, InvoiceDetail:InvoiceID)
   ThisReport.AddSortOrder(InvoiceDetail:InvoiceKey)
-  ThisReport.SetFilter('DTL:CustNumber=ORD:CustNumber AND DTL:OrderNumber=ORD:OrderNumber')
+  ThisReport.SetFilter('InvoiceDetail:CustNumber=Invoice:CustNumber AND InvoiceDetail:OrderNumber=Invoice:OrderNumber')
   SELF.AddItem(?Progress:Cancel,RequestCancelled)
   SELF.Init(ThisReport,Report,Previewer)
   ?Progress:UserString{PROP:Text} = ''
@@ -197,6 +200,9 @@ ReturnValue          BYTE,AUTO
   IF SELF.FilesOpened
     Relate:Company.Close
     Relate:Customer.Close
+  END
+  IF SELF.Opened
+    INIMgr.Update('PrintInvoiceFromBrowse',ProgressWindow) ! Save window data to non-volatile store
   END
   ProgressMgr.Kill()
   GlobalErrors.SetProcedureName
@@ -234,13 +240,12 @@ ReturnValue          BYTE,AUTO
 
 SkipDetails BYTE
   CODE
-  ExtendPrice = DTL:Price * DTL:QuantityOrdered
-  GLOT:CustName = CLIP(CUS:FirstName) & '   ' & CLIP(CUS:LastName)
-  GLOT:CustAddress = CLIP(CUS:Address1) & '    ' & CLIP(CUS:Address2)
-  GLOT:CusCSZ = CLIP(CUS:City) & ',  ' & CUS:State & '     ' & CLIP(CUS:ZipCode)
-  GLOT:ShipName = CLIP(ORD:ShipToName)
-  GLOT:ShipAddress = CLIP(ORD:ShipAddress1) & '    ' & CLIP(ORD:ShipAddress2)
-  GLOT:ShipCSZ = CLIP(ORD:ShipCity) & ',  ' & ORD:ShipState & '    ' & CLIP(ORD:ShipZip)
+  ExtendPrice = InvoiceDetail:Price * InvoiceDetail:QuantityOrdered
+  GLOT:CustName = CLIP(Customer:FirstName) & '   ' & CLIP(Customer:LastName)
+  GLOT:CustAddress = CLIP(Customer:Address1) & '    ' & CLIP(Customer:Address2)
+  GLOT:ShipName = CLIP(Invoice:ShipToName)
+  GLOT:ShipAddress = CLIP(Invoice:ShipAddress1) & '    ' & CLIP(Invoice:ShipAddress2)
+  GLOT:ShipCSZ = CLIP(Invoice:ShipCity) & ',  ' & Invoice:ShipState & '    ' & CLIP(Invoice:ShipZip)
   ReturnValue = PARENT.TakeRecord()
   PRINT(RPT:detail)
   RETURN ReturnValue

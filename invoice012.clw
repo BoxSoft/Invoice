@@ -18,6 +18,8 @@ Progress:Thermometer BYTE                                  !
 LOC:CSZ              STRING(45)                            !
 LOC:Address          STRING(45)                            !
 Process:View         VIEW(Customer)
+                       PROJECT(Customer:Address1)
+                       PROJECT(Customer:Address2)
                        PROJECT(Customer:Company)
                        PROJECT(Customer:Extension)
                        PROJECT(Customer:FirstName)
@@ -101,6 +103,7 @@ ReturnValue          BYTE,AUTO
   SELF.FilesOpened = True
   SELF.Open(ProgressWindow)                                ! Open window
   Do DefineListboxStyle
+  INIMgr.Fetch('PrintSelectedCustomer',ProgressWindow)     ! Restore window settings from non-volatile store
   ProgressMgr.Init(ScrollSort:AllowAlpha+ScrollSort:AllowNumeric,ScrollBy:RunTime)
   ThisReport.Init(Process:View, Relate:Customer, ?Progress:PctText, Progress:Thermometer, ProgressMgr, Customer:LastName)
   ThisReport.CaseSensitiveValue = FALSE
@@ -135,6 +138,9 @@ ReturnValue          BYTE,AUTO
   IF SELF.FilesOpened
     Relate:Customer.Close
   END
+  IF SELF.Opened
+    INIMgr.Update('PrintSelectedCustomer',ProgressWindow)  ! Save window data to non-volatile store
+  END
   ProgressMgr.Kill()
   GlobalErrors.SetProcedureName
   RETURN ReturnValue
@@ -146,13 +152,12 @@ ReturnValue          BYTE,AUTO
 
 SkipDetails BYTE
   CODE
-  GLOT:CustName = CLIP(CUS:FirstName) & '   ' & CLIP(CUS:LastName)
-  IF (CUS:Address2 = '')
-    LOC:Address = CUS:Address1
+  GLOT:CustName = CLIP(Customer:FirstName) & '   ' & CLIP(Customer:LastName)
+  IF (Customer:Address2 = '')
+    LOC:Address = Customer:Address1
   ELSE
-    LOC:Address = CLIP(CUS:Address1) & ',  ' & CUS:Address2
+    LOC:Address = CLIP(Customer:Address1) & ',  ' & Customer:Address2
   END
-  LOC:CSZ = CityStateZip(CUS:City,CUS:State,CUS:ZipCode)
   ReturnValue = PARENT.TakeRecord()
   PRINT(RPT:detail)
   RETURN ReturnValue

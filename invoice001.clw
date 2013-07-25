@@ -115,6 +115,8 @@ ReturnValue          BYTE,AUTO
   QuickWindow{PROP:MinHeight} = 203                        ! Restrict the minimum window height
   Resizer.Init(AppStrategy:Spread)                         ! Controls will spread out as the window gets bigger
   SELF.AddItem(Resizer)                                    ! Add resizer to window manager
+  INIMgr.Fetch('SelectStates',QuickWindow)                 ! Restore window settings from non-volatile store
+  Resizer.Resize                                           ! Reset required after window size altered by INI manager
   BRW1.AddToolbarTarget(Toolbar)                           ! Browse accepts toolbar control
   BRW1.ToolbarItem.HelpButton = ?Help
   SELF.SetAlerts()
@@ -130,6 +132,9 @@ ReturnValue          BYTE,AUTO
   IF ReturnValue THEN RETURN ReturnValue.
   IF SELF.FilesOpened
     Relate:States.Close
+  END
+  IF SELF.Opened
+    INIMgr.Update('SelectStates',QuickWindow)              ! Save window data to non-volatile store
   END
   GlobalErrors.SetProcedureName
   RETURN ReturnValue

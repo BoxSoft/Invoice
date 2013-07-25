@@ -98,6 +98,7 @@ ReturnValue          BYTE,AUTO
   SELF.FilesOpened = True
   SELF.Open(ProgressWindow)                                ! Open window
   Do DefineListboxStyle
+  INIMgr.Fetch('PrintSelectedProduct',ProgressWindow)      ! Restore window settings from non-volatile store
   ProgressMgr.Init(ScrollSort:AllowAlpha+ScrollSort:AllowNumeric,ScrollBy:RunTime)
   ThisReport.Init(Process:View, Relate:Product, ?Progress:PctText, Progress:Thermometer, ProgressMgr, Product:ProductSKU)
   ThisReport.CaseSensitiveValue = FALSE
@@ -132,6 +133,9 @@ ReturnValue          BYTE,AUTO
   IF SELF.FilesOpened
     Relate:Product.Close
   END
+  IF SELF.Opened
+    INIMgr.Update('PrintSelectedProduct',ProgressWindow)   ! Save window data to non-volatile store
+  END
   ProgressMgr.Kill()
   GlobalErrors.SetProcedureName
   RETURN ReturnValue
@@ -143,7 +147,7 @@ ReturnValue          BYTE,AUTO
 
 SkipDetails BYTE
   CODE
-  Report$?Image1{PROP:TEXT} = PRO:PictureFile
+  Report$?Image1{PROP:TEXT} = Product:PictureFile
   ReturnValue = PARENT.TakeRecord()
   PRINT(RPT:detail)
   RETURN ReturnValue

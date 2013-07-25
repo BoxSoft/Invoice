@@ -61,10 +61,10 @@ BrowseProducts         PROCEDURE   !Browse Products File (Edit-In-Place and call
 UpdateProducts         PROCEDURE   !Update the Products File
      END
      MODULE('INVOICE016.CLW')
-PrintCUS:StateKey      PROCEDURE   !Report the Customers File
+PrintCustomer:StateKey PROCEDURE   !Report the Customers File
      END
      MODULE('INVOICE017.CLW')
-PrintPRO:KeyProductSKU PROCEDURE   !Report the Products File
+PrintProduct:KeyProductSKU PROCEDURE   !Report the Products File
      END
      MODULE('INVOICE018.CLW')
 PrintInvoice           PROCEDURE   !Prints Invoice - Using the Pause Control Template

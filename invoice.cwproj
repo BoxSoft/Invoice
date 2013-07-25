@@ -1,14 +1,14 @@
 ﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <ProjectGuid>{6713B082-28E3-419E-B429-081608E1B7F5}</ProjectGuid>
+    <ProjectGuid>{16881C62-0AD8-44DF-A707-D854319B4A38}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">Win32</Platform>
     <OutputType>Exe</OutputType>
-    <AssemblyName>invoice</AssemblyName>
-    <OutputName>invoice</OutputName>
-    <ApplicationIcon>order.ico</ApplicationIcon>
+    <RootNamespace>Invoice</RootNamespace>
+    <AssemblyName>Invoice</AssemblyName>
+    <OutputName>Invoice</OutputName>
+    <CWOutputType>Exe</CWOutputType>
     <DefineConstants>_ABCDllMode_=&gt;0%3b_ABCLinkMode_=&gt;1</DefineConstants>
-    <Model>Dll</Model>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>True</DebugSymbols>
@@ -29,9 +29,11 @@
     <Library Include="File.ico" />
     <Library Include="Folder.ico" />
     <Library Include="invoice.EXE.manifest" />
+    <Library Include="Invoice.ico" />
     <Library Include="order.ico" />
     <Library Include="QkLoad.ico" />
     <Library Include="QkQBE.ico" />
+    <Library Include="star1.ico" />
     <FileDriver Include="TOPSPEED" />
     <Compile Include="invoice.clw">
       <Generated>true</Generated>
