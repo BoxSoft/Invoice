@@ -25,35 +25,35 @@ QuickWindow          WINDOW('Update Customers'),AT(,,214,191),FONT('MS Sans Seri
                          TAB('Tab 1'),USE(?Tab1)
                          END
                        END
-                       PROMPT('&Company:'),AT(8,9),USE(?Customer:Company:Prompt),TRN
+                       PROMPT('&Company:'),AT(8,9),USE(?Customer:Company:Prompt)
                        ENTRY(@s20),AT(64,9,84,10),USE(Customer:Company),CAP,MSG('Enter the customer''s company')
-                       PROMPT('&First Name:'),AT(8,23),USE(?Customer:FirstName:Prompt),TRN
+                       PROMPT('&First Name:'),AT(8,23),USE(?Customer:FirstName:Prompt)
                        ENTRY(@s20),AT(64,23,84,10),USE(Customer:FirstName),CAP,MSG('Enter the first name of customer'), |
   REQ
-                       PROMPT('MI:'),AT(8,37,23,10),USE(?Customer:MI:Prompt),TRN
+                       PROMPT('MI:'),AT(8,37,23,10),USE(?Customer:MI:Prompt)
                        ENTRY(@s1),AT(64,37,21,10),USE(Customer:MI),UPR,MSG('Enter the middle initial of customer')
-                       PROMPT('&Last Name:'),AT(8,51),USE(?Customer:LastName:Prompt),TRN
+                       PROMPT('&Last Name:'),AT(8,51),USE(?Customer:LastName:Prompt)
                        ENTRY(@s25),AT(64,51,104,10),USE(Customer:LastName),CAP,MSG('Enter the last name of customer'), |
   REQ
-                       PROMPT('&Address1:'),AT(8,65),USE(?Customer:Address1:Prompt),TRN
+                       PROMPT('&Address1:'),AT(8,65),USE(?Customer:Address1:Prompt)
                        ENTRY(@s35),AT(64,65,139,10),USE(Customer:Address1),CAP,MSG('Enter the first line addre' & |
   'ss of customer')
-                       PROMPT('Address2:'),AT(8,79),USE(?Customer:Address2:Prompt),TRN
+                       PROMPT('Address2:'),AT(8,79),USE(?Customer:Address2:Prompt)
                        ENTRY(@s35),AT(64,79,139,10),USE(Customer:Address2),CAP,MSG('Enter the second line addr' & |
   'ess of customer if any')
-                       PROMPT('&City:'),AT(8,93),USE(?Customer:City:Prompt),TRN
+                       PROMPT('&City:'),AT(8,93),USE(?Customer:City:Prompt)
                        ENTRY(@s25),AT(64,93,104,10),USE(Customer:City),CAP,MSG('Enter  city of customer')
-                       PROMPT('&State:'),AT(8,108),USE(?Customer:State:Prompt),TRN
+                       PROMPT('&State:'),AT(8,108),USE(?Customer:State:Prompt)
                        ENTRY(@s2),AT(64,108,22,10),USE(Customer:StateCode),UPR,MSG('Enter state of customer')
-                       PROMPT('&Zip Code:'),AT(8,122),USE(?Customer:ZipCode:Prompt),TRN
+                       PROMPT('&Zip Code:'),AT(8,122),USE(?Customer:ZipCode:Prompt)
                        ENTRY(@K#####|-####KB),AT(64,122,69,10),USE(Customer:ZipCode),MSG('Enter zipcode of customer'), |
   TIP('Enter zipcode of customer'),MSG('Customer''s ZipCode')
-                       PROMPT('Phone Number:'),AT(8,136),USE(?Customer:PhoneNumber:Prompt),TRN
+                       PROMPT('Phone Number:'),AT(8,136),USE(?Customer:PhoneNumber:Prompt)
                        ENTRY(@P(###) ###-####PB),AT(64,136,68,10),USE(Customer:PhoneNumber),MSG('Customer''s p' & |
   'hone number')
-                       PROMPT('Extension:'),AT(8,150),USE(?Customer:Extension:Prompt),TRN
+                       PROMPT('Extension:'),AT(8,150),USE(?Customer:Extension:Prompt)
                        ENTRY(@P<<<#PB),AT(64,150,24,10),USE(Customer:Extension),MSG('Enter customer''s phone extension')
-                       PROMPT('Phone Type:'),AT(109,150,43,10),USE(?Customer:PhoneType:Prompt),TRN
+                       PROMPT('Phone Type:'),AT(109,150,43,10),USE(?Customer:PhoneType:Prompt)
                        LIST,AT(158,150,44,10),USE(Customer:PhoneType),DROP(5),FROM('Home|Work|Cellular|Pager|Fax|Other'), |
   MSG('Enter customer''s phone type')
                        BUTTON,AT(70,167,21,20),USE(?OK),ICON('DISK12.ICO'),DEFAULT,FLAT,MSG('Save recod and Exit'), |
@@ -62,10 +62,6 @@ QuickWindow          WINDOW('Update Customers'),AT(,,214,191),FONT('MS Sans Seri
                        BUTTON,AT(125,167,21,20),USE(?Cancel),ICON(ICON:Cross),FLAT,MSG('Cancels change and Exit'), |
   TIP('Cancels change and Exit')
                      END
-PTS::Alerts          CLASS
-AlertKeys              PROCEDURE
-HandleAlerts           PROCEDURE,BOOL
-                     END
 
 ThisWindow           CLASS(WindowManager)
 Ask                    PROCEDURE(),DERIVED
@@ -73,9 +69,6 @@ Init                   PROCEDURE(),BYTE,PROC,DERIVED
 Kill                   PROCEDURE(),BYTE,PROC,DERIVED
 Run                    PROCEDURE(),BYTE,PROC,DERIVED
 TakeAccepted           PROCEDURE(),BYTE,PROC,DERIVED
-TakeEvent              PROCEDURE(),BYTE,PROC,DERIVED
-TakeSelected           PROCEDURE(),BYTE,PROC,DERIVED
-TakeWindowEvent        PROCEDURE(),BYTE,PROC,DERIVED
                      END
 
 Toolbar              ToolbarClass
@@ -246,98 +239,6 @@ Looped BYTE
   END
   ReturnValue = Level:Fatal
   RETURN ReturnValue
-
-
-ThisWindow.TakeEvent PROCEDURE
-
-ReturnValue          BYTE,AUTO
-
-Looped BYTE
-  CODE
-  LOOP                                                     ! This method receives all events
-    IF Looped
-      RETURN Level:Notify
-    ELSE
-      Looped = 1
-    END
-    PTS::Alerts.AlertKeys
-  ReturnValue = PARENT.TakeEvent()
-    RETURN ReturnValue
-  END
-  ReturnValue = Level:Fatal
-  RETURN ReturnValue
-
-
-ThisWindow.TakeSelected PROCEDURE
-
-ReturnValue          BYTE,AUTO
-
-Looped BYTE
-  CODE
-  LOOP                                                     ! This method receives all Selected events
-    IF Looped
-      RETURN Level:Notify
-    ELSE
-      Looped = 1
-    END
-  ReturnValue = PARENT.TakeSelected()
-    CASE FIELD()
-    OF ?Customer:Company
-      PRESSKEY(CtrlH)
-    END
-    RETURN ReturnValue
-  END
-  ReturnValue = Level:Fatal
-  RETURN ReturnValue
-
-
-ThisWindow.TakeWindowEvent PROCEDURE
-
-ReturnValue          BYTE,AUTO
-
-Looped BYTE
-  CODE
-  LOOP                                                     ! This method receives all window specific events
-    IF Looped
-      RETURN Level:Notify
-    ELSE
-      Looped = 1
-    END
-  ReturnValue = PARENT.TakeWindowEvent()
-    CASE EVENT()
-    OF EVENT:AlertKey
-      IF PTS::Alerts.HandleAlerts()
-        CYCLE
-      END
-    END
-    RETURN ReturnValue
-  END
-  ReturnValue = Level:Fatal
-  RETURN ReturnValue
-
-
-PTS::Alerts.AlertKeys PROCEDURE
-  CODE
-  ALERT
-      ALERT(CtrlH)
-
-
-PTS::Alerts.HandleAlerts PROCEDURE !,BOOL
-WasAlertHandled            BOOL(FALSE)
-r:Field                    LONG
-
-  CODE
-  r:Field = CHOOSE(FIELD() <> 0, FIELD(), FOCUS())
-  IF Keycode() = CtrlH
-
-       IF r:Field=?Customer:Company
-         MESSAGE('Hello')
-       END
-       WasAlertHandled = TRUE
-     ! Exit
-
-  End       !EndIf
-  RETURN WasAlertHandled
 
 
 Resizer.Init PROCEDURE(BYTE AppStrategy=AppStrategy:Resize,BYTE SetWindowMinSize=False,BYTE SetWindowMaxSize=False)
